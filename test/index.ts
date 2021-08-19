@@ -468,6 +468,24 @@ describe('retry-axios', () => {
     await assert.rejects(axios(cfg));
     assert.strictEqual(scopes[1].isDone(), false);
   });
+  
+  it('should not retry or cause error if error response does not contain headers', async () => {
+    const scopes = [
+      nock(url).get('/').reply(500, undefined, undefined)
+    ];
+    interceptorId = rax.attach();
+    const cfg: rax.RaxConfig = {url};
+    await assert.rejects(
+      axios(cfg),
+      (err) => {
+        assert.strictEqual(axios.isAxiosError(err), true);
+        assert.strictEqual(err.response.status, 500);
+        assert.strictEqual(err.response.headers, undefined);
+        return true;
+      }
+    );
+    assert.strictEqual(scopes[0].isDone(), true);
+  });
 });
 
 function invertedPromise() {
